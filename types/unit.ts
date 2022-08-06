@@ -1,0 +1,30 @@
+export enum Unit {
+  ITEM = 'ITEM',
+  TEASPOON = 'TEASPOON',
+  TABLESPOON = 'TABLESPOON',
+  FLUID = 'FLUID',
+  GILL = 'GILL',
+  CUP = 'CUP',
+  PINT = 'PINT',
+  QUART = 'QUART',
+  GALLON = 'GALLON',
+  MILLILITER = 'MILLILITER',
+  LITER = 'LITER',
+  DECILITER = 'DECILITER',
+  POUND = 'POUND',
+  OUNCE = 'OUNCE',
+  MILLIGRAM = 'MILLIGRAM',
+  GRAM = 'GRAM',
+  KILOGRAM = 'KILOGRAM',
+  MILLIMETER = 'MILLIMETER',
+  CENTIMETER = 'CENTIMETER',
+  METER = 'METER',
+  INCH = 'INCH',
+}
+
+export enum UnitGroup {
+  AMOUNT = 'Amount',
+  MASS = 'Mass',
+  VOLUME = 'Volume',
+  LENGTH = 'Length',
+}

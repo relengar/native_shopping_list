@@ -1,18 +1,25 @@
 import {FC} from 'react';
+
 import {AllLists} from './screens/AllLists';
-import {CurrentList} from './screens/CurrentList';
-import {EditList} from './screens/EditList';
+import {CurrentList, CurrentListParams} from './screens/CurrentList';
+import {EditItem, EditItemParams} from './screens/EditItem';
+import {EditList, EditListParams} from './screens/EditList';
+import {Sharing, SharingParams} from './screens/Sharing';
 import {Landing} from './screens/Landing';
 import {Login} from './screens/Login';
-
-type Generic = {list?: {[key: string]: any}}; // todo temp type
+import {UnitConverter, UnitConverterParams} from './screens/UnitConverter';
+import {UserSearch, UserSearchParams} from './screens/UserSearch';
 
 export type RootStackParamList = {
-  [ScreenName.EDIT_LIST]: Generic | undefined;
+  [ScreenName.EDIT_LIST]: EditListParams | undefined;
+  [ScreenName.EDIT_ITEM]: EditItemParams;
+  [ScreenName.SHARE_LIST]: SharingParams;
   [ScreenName.LANDING]: undefined;
   [ScreenName.LOGIN]: undefined;
   [ScreenName.ALL_LISTS]: undefined;
-  [ScreenName.CURRENT_LIST]: undefined;
+  [ScreenName.CURRENT_LIST]: CurrentListParams;
+  [ScreenName.UNIT_CONVERTER]: UnitConverterParams;
+  [ScreenName.USER_SEARCH]: UserSearchParams;
 };
 
 export enum ScreenName {
@@ -20,7 +27,11 @@ export enum ScreenName {
   LOGIN = 'LOGIN',
   ALL_LISTS = 'ALL_LISTS',
   EDIT_LIST = 'EDIT_LIST',
+  SHARE_LIST = 'SHARE_LIST',
+  USER_SEARCH = 'USER_SEARCH',
   CURRENT_LIST = 'CURRENT_LIST',
+  EDIT_ITEM = 'EDIT_ITEM',
+  UNIT_CONVERTER = 'UNIT_CONVERTER',
 }
 
 export type NavigationScreenItem = {
@@ -34,5 +45,9 @@ export const screens: NavigationScreenItem[] = [
   {name: ScreenName.LOGIN, component: Login},
   {name: ScreenName.ALL_LISTS, component: AllLists},
   {name: ScreenName.EDIT_LIST, component: EditList},
+  {name: ScreenName.SHARE_LIST, component: Sharing},
+  {name: ScreenName.USER_SEARCH, component: UserSearch},
   {name: ScreenName.CURRENT_LIST, component: CurrentList},
+  {name: ScreenName.EDIT_ITEM, component: EditItem},
+  {name: ScreenName.UNIT_CONVERTER, component: UnitConverter},
 ];

@@ -1,12 +1,22 @@
 import axios, {AxiosInstance, AxiosRequestConfig, Method} from 'axios';
-import authStore from '../store/auth';
 import {HttpError} from './error';
+import {API_URL} from '@env';
+
+export type PaginatedResponse<T> = {
+  items: T[];
+  total: number;
+};
+
+let TOKEN: string | null = null;
 
 export abstract class HttpClient {
   #instance: AxiosInstance;
   #config: AxiosRequestConfig;
-  constructor(config: AxiosRequestConfig) {
-    this.#config = config;
+  constructor(configOverride?: AxiosRequestConfig) {
+    this.#config = {
+      baseURL: API_URL,
+      ...configOverride,
+    };
     this.#instance = axios.create(this.#config);
   }
 
@@ -24,10 +34,10 @@ export abstract class HttpClient {
       ...configOverrides,
     };
 
-    if (authStore.token) {
+    if (TOKEN) {
       config.headers = {
         ...config.headers,
-        ['Authorization']: `bearer ${authStore.token}`,
+        ['Authorization']: `bearer ${TOKEN}`,
       };
     }
 
@@ -43,5 +53,9 @@ export abstract class HttpClient {
   private createError(error: any): HttpError {
     const message = error.response?.data?.message ?? error?.toJSON().message;
     return new HttpError(message, error.status);
+  }
+
+  public set token(token: string | null) {
+    TOKEN = token;
   }
 }

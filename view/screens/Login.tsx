@@ -1,12 +1,12 @@
 import React, {useContext, useEffect, useState} from 'react';
 import {ActivityIndicator, StyleSheet, View} from 'react-native';
 import {Button, Input, Text} from 'react-native-elements';
-import authClient from '../../services/http/auth';
 import NetInfo from '@react-native-community/netinfo';
 import {useForm, Controller} from 'react-hook-form';
 import {Store} from '../../providers';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ScreenName} from '../navigation';
+import {Services} from '../../providers/serviceProvider';
 
 type LoginData = {
   username: string;
@@ -22,7 +22,8 @@ export const Login: React.FC<{navigation: NativeStackNavigationProp<any>}> = ({
     formState: {errors},
   } = useForm<LoginData>();
 
-  const {authStorage} = useContext(Store);
+  const {setCurrentUser} = useContext(Store);
+  const {authHttpClient} = useContext(Services);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setisLoading] = useState<boolean>(false);
 
@@ -41,13 +42,28 @@ export const Login: React.FC<{navigation: NativeStackNavigationProp<any>}> = ({
   const handleLogin = async ({username, password}: LoginData) => {
     try {
       setisLoading(true);
-      const resp = await authClient.login(username, password);
-      await authStorage.setCurrentUser({
+      const resp = await authHttpClient.login(username, password);
+      setCurrentUser({
         username,
         token: resp.token,
         id: resp.id,
       });
       navigation.navigate(ScreenName.LANDING);
+    } catch (error: any) {
+      setErrorMessage(error.message);
+      setisLoading(false);
+    }
+  };
+
+  const handleRegister = async ({username, password}: LoginData) => {
+    try {
+      setisLoading(true);
+      const resp = await authHttpClient.register(username, password);
+      setCurrentUser({
+        username,
+        token: resp.token,
+        id: resp.id,
+      });
     } catch (error: any) {
       setErrorMessage(error.message);
       setisLoading(false);
@@ -75,7 +91,9 @@ export const Login: React.FC<{navigation: NativeStackNavigationProp<any>}> = ({
         )}
         name="username"
       />
-      <Text>{errors?.username && 'Invalid username'}</Text>
+      <Text style={styles.formErrorMessage}>
+        {errors?.username && 'Invalid username'}
+      </Text>
       <Controller
         control={control}
         rules={{
@@ -98,13 +116,23 @@ export const Login: React.FC<{navigation: NativeStackNavigationProp<any>}> = ({
         )}
         name="password"
       />
-      <Text>{errors?.password && 'Invalid password'}</Text>
+      <Text style={styles.formErrorMessage}>
+        {errors?.password && 'Invalid password'}
+      </Text>
 
       <Button
+        containerStyle={styles.submitButton}
         disabled={isLoading}
         onPress={handleSubmit(handleLogin)}
         title="Log In"
         accessibilityLabel="Log In"
+      />
+      <Button
+        containerStyle={styles.submitButton}
+        disabled={isLoading}
+        onPress={handleSubmit(handleRegister)}
+        title="Sign Up"
+        accessibilityLabel="Sign Up"
       />
       {isLoading && <ActivityIndicator style={styles.spinner} size={'large'} />}
       {errorMessage && <Text style={styles.errorMessage}>{errorMessage}</Text>}
@@ -122,7 +150,14 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingTop: 15,
   },
+  formErrorMessage: {
+    color: '#eb4034',
+    marginHorizontal: 10,
+  },
   spinner: {
     paddingTop: 15,
+  },
+  submitButton: {
+    margin: 10,
   },
 });

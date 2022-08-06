@@ -2,17 +2,16 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import React, {useContext, useEffect} from 'react';
 import {ActivityIndicator, SafeAreaView} from 'react-native';
 import {Store} from '../../providers';
-import {AuthStorageInterface} from '../../services/store/auth';
 import {ScreenName} from '../navigation';
 
 export const Landing: React.FC<{
   navigation: NativeStackNavigationProp<any>;
 }> = ({navigation}) => {
-  const {authStorage, isInitialized} = useContext(Store);
+  const {currentUser, currentList, isInitialized} = useContext(Store);
 
   useEffect(() => {
     if (isInitialized) {
-      getInitialScreen(authStorage).then(screen => {
+      getInitialScreen(!!currentUser, !!currentList?.id).then(screen => {
         navigation.reset({
           index: 0,
           routes: [
@@ -33,14 +32,16 @@ export const Landing: React.FC<{
 };
 
 async function getInitialScreen(
-  auth: AuthStorageInterface,
+  hasCurrentUser: boolean,
+  hasCurrentList: boolean,
 ): Promise<ScreenName> {
-  const user = await auth.getCurrentUser();
-  if (!user) {
+  if (!hasCurrentUser) {
     return ScreenName.LOGIN;
   }
 
-  // TODO
-  // if currentList go to the list else show all lists
+  if (hasCurrentList) {
+    return ScreenName.CURRENT_LIST;
+  }
+
   return ScreenName.ALL_LISTS;
 }
