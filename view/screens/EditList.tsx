@@ -1,11 +1,13 @@
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import React, {useContext, useEffect} from 'react';
 import {Button, Input, Text} from 'react-native-elements';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useForm, Controller} from 'react-hook-form';
-import {List, ListDTO} from '../../services/store/lists';
 import {Store} from '../../providers';
-import listClient from '../../services/http/lists';
+import {List, ListDTO} from '../../types';
+import {RootStackParamList, ScreenName} from '../navigation';
+import {StyleSheet} from 'react-native';
+import {Services} from '../../providers/serviceProvider';
 
 const blankList: ListDTO = {
   title: '',
@@ -14,17 +16,20 @@ const blankList: ListDTO = {
 
 type ListInput = ListDTO & {id?: string};
 
-export const EditList: React.FC<{
-  navigation: NativeStackNavigationProp<any>;
-  route: any; // TODO create list type
-}> = ({navigation, route}) => {
+export type EditListParams = {list: List};
+
+export const EditList: React.FC<
+  NativeStackScreenProps<RootStackParamList, ScreenName.EDIT_LIST>
+> = ({navigation, route}) => {
   const {
     control,
     handleSubmit,
     formState: {errors},
     reset,
   } = useForm<List>();
-  const {listStorage, authStorage} = useContext(Store);
+
+  const {listsHtpClient} = useContext(Services);
+  const {currentUser, currentList, setCurrentList} = useContext(Store);
 
   useEffect(() => {
     const list = route.params?.list ?? blankList;
@@ -34,22 +39,41 @@ export const EditList: React.FC<{
   const submitChange = async (list: ListInput) => {
     if (list.id) {
       try {
-        const updatedList = await listClient.updateList(list as List);
-        await listStorage.updateList(updatedList);
+        listsHtpClient.updateList(list as List);
         navigation.goBack();
       } catch (error) {
         console.error(error);
       }
     } else {
-      const user = await authStorage.getCurrentUser();
       try {
-        const newList = await listClient.createList(list, user!.id);
-        await listStorage.addList(newList);
+        await listsHtpClient.createList(list, currentUser!.id);
+
         navigation.goBack();
       } catch (error) {
         console.error(error);
       }
     }
+  };
+
+  const deleteThisList = async () => {
+    if (!route.params?.list.id) {
+      return;
+    }
+
+    await listsHtpClient.deleteList(route.params?.list.id);
+
+    if (currentList?.id === route.params?.list.id) {
+      setImmediate(() => setCurrentList(null));
+    }
+
+    navigation.reset({
+      index: 0,
+      routes: [
+        {
+          name: ScreenName.ALL_LISTS,
+        },
+      ],
+    });
   };
 
   return (
@@ -73,9 +97,6 @@ export const EditList: React.FC<{
       <Text>{errors?.title && 'Missing title'}</Text>
       <Controller
         control={control}
-        rules={{
-          required: true,
-        }}
         name="description"
         render={({field: {onChange, onBlur, value}}) => (
           <Input
@@ -87,8 +108,38 @@ export const EditList: React.FC<{
           />
         )}
       />
-      <Text>{errors?.description && 'Missing description'}</Text>
-      <Button title="Submit" onPress={handleSubmit(submitChange)} />
+      <Button
+        buttonStyle={styles.submitButton}
+        title="Submit"
+        onPress={handleSubmit(submitChange)}
+      />
+      {route.params?.list.id && (
+        <Button
+          buttonStyle={styles.deleteButton}
+          containerStyle={styles.deleteButtonContainer}
+          title="Delete"
+          onPress={handleSubmit(deleteThisList)}
+        />
+      )}
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  submitButton: {
+    alignSelf: 'center',
+    width: '95%',
+    borderRadius: 15,
+    height: 60,
+  },
+  deleteButtonContainer: {
+    marginVertical: 20,
+  },
+  deleteButton: {
+    backgroundColor: '#543d3d',
+    alignSelf: 'center',
+    width: '95%',
+    borderRadius: 15,
+    height: 40,
+  },
+});

@@ -1,26 +1,21 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * Generated with the TypeScript template
- * https://github.com/react-native-community/react-native-template-typescript
- *
- * @format
- */
-
 import {gestureHandlerRootHOC} from 'react-native-gesture-handler';
-import React, {useContext} from 'react';
+import React from 'react';
 import {Theme, DarkTheme, NavigationContainer} from '@react-navigation/native';
-import {Store, StoreProvider} from './providers';
+import {StoreProvider} from './providers';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {header} from './view/components/Header';
 import {createDrawerNavigator} from '@react-navigation/drawer';
 import {DrawerContent} from './view/components/Drawer';
 import {RootStackParamList, ScreenName, screens} from './view/navigation';
 import {ThemeProvider} from 'react-native-elements';
+import {ServicesInterface, ServicesProvider} from './providers/serviceProvider';
+import {AuthClient} from './services/http/auth';
+import {UsersClient} from './services/http/users';
+import {ListsClient} from './services/http/lists';
+import {ItemsClient} from './services/http/items';
 
 const Drawer = createDrawerNavigator<RootStackParamList>();
-const theme: Theme = {
+export const theme: Theme = {
   ...DarkTheme,
   colors: {
     primary: '#474a43',
@@ -33,8 +28,6 @@ const theme: Theme = {
   },
 };
 
-// TODO set some global theme
-
 const MainView = gestureHandlerRootHOC(({children}) => (
   <SafeAreaProvider>
     <ThemeProvider theme={theme} useDark={true}>
@@ -43,33 +36,42 @@ const MainView = gestureHandlerRootHOC(({children}) => (
   </SafeAreaProvider>
 ));
 
-export const App = () => {
-  const {authStorage} = useContext(Store);
+const authClient = new AuthClient();
 
+const services: ServicesInterface = {
+  authHttpClient: authClient,
+  usersHttpClient: new UsersClient(),
+  listsHtpClient: new ListsClient(),
+  itemsHttpClient: new ItemsClient(),
+};
+
+export const App = () => {
   return (
     <MainView>
-      <StoreProvider>
-        <NavigationContainer theme={theme}>
-          <Drawer.Navigator
-            initialRouteName={ScreenName.LANDING}
-            backBehavior="history"
-            drawerContent={props => {
-              return <DrawerContent {...props} authStorage={authStorage} />;
-            }}
-            screenOptions={{
-              drawerPosition: 'right',
-              header,
-            }}>
-            {screens.map((screen, i) => (
-              <Drawer.Screen
-                key={i}
-                name={screen.name}
-                component={screen.component}
-              />
-            ))}
-          </Drawer.Navigator>
-        </NavigationContainer>
-      </StoreProvider>
+      <ServicesProvider services={services}>
+        <StoreProvider authClient={authClient}>
+          <NavigationContainer theme={theme}>
+            <Drawer.Navigator
+              initialRouteName={ScreenName.LANDING}
+              backBehavior="history"
+              drawerContent={props => {
+                return <DrawerContent {...props} />;
+              }}
+              screenOptions={{
+                drawerPosition: 'right',
+                header,
+              }}>
+              {screens.map((screen, i) => (
+                <Drawer.Screen
+                  key={i}
+                  name={screen.name}
+                  component={screen.component}
+                />
+              ))}
+            </Drawer.Navigator>
+          </NavigationContainer>
+        </StoreProvider>
+      </ServicesProvider>
     </MainView>
   );
 };
